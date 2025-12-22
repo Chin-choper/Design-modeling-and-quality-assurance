@@ -11,9 +11,11 @@ class OperationList(generic.ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
         context['available_years'] = Operation.objects.dates('date', 'year')
         context['available_months'] = Operation.objects.dates('date', 'month')
         base_qs = Operation.objects.all()
+
         if self.request.GET.get('year'):
             base_qs = base_qs.filter(date__year=self.request.GET.get('year'))
         if self.request.GET.get('month'):
@@ -39,6 +41,7 @@ class OperationList(generic.ListView):
             with open(file_path, 'r', encoding='utf-8') as f:
                 for line in f:
                     parts = line.strip().split('|')
+
                     if len(parts) == 4:
                         Operation.objects.create(
                             op_type=parts[0].strip(),
@@ -58,4 +61,5 @@ class OperationList(generic.ListView):
 
         except Exception as e:
             print(f"Помилка: {e}")
+
         return super().get(request, *args, **kwargs)
