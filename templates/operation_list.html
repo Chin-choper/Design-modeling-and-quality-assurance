@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Моніторинг ЗЕД</title>
+</head>
+<body>
+    <h3>Система моніторингу експортно-імпортних операцій</h3>
+
+    <h4 style="color: blue;">Експорт</h4>
+    <table border="1" cellpadding="5">
+        <thead>
+            <tr>
+                <th>Категорія</th>
+                <th>Дата</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for item in operations %}
+            {% if item.op_type == 'Export' %}
+            <tr>
+                <td>{{ item.category }}</td>
+                <td>{{ item.date }}</td>
+            </tr>
+            {% endif %}
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <br>
+
+    <h4 style="color: green;">Імпорт</h4>
+    <table border="1" cellpadding="5">
+        <thead>
+            <tr>
+                <th>Категорія</th>
+                <th>Дата</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for item in operations %}
+            {% if item.op_type == 'Import' %}
+            <tr>
+                <td>{{ item.category }}</td>
+                <td>{{ item.date }}</td>
+            </tr>
+            {% endif %}
+        {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
