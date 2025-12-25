@@ -94,13 +94,41 @@
     </div>
 
     <div id="CountryView" class="tabcontent">
-        <h4>ТОП Країн (Експорт)</h4>
-        <table style="width: 30%;">
-            <tr class="header-main"><th>Країна</th></tr>
-            {% for item in top_export_countries %}
-            <tr><td><b>{{ item.partner_country }}</b></td></tr>
-            {% empty %}<tr><td>Дані відсутні</td></tr>{% endfor %}
-        </table>
+        <div style="display: flex; gap: 50px; flex-wrap: wrap;">
+            
+            <div style="min-width: 300px;">
+                <h4 style="color: blue;">ТОП Країн (Експорт)</h4>
+                <table style="width: 100%;">
+                    <tr class="header-main">
+                        <th>Країна</th>
+                    </tr>
+                    {% for item in top_export_countries %}
+                    <tr>
+                        <td><b>{{ item.partner_country }}</b></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td>Дані відсутні</td></tr>
+                    {% endfor %}
+                </table>
+            </div>
+
+            <div style="min-width: 300px;">
+                <h4 style="color: green;">ТОП Країн (Імпорт)</h4>
+                <table style="width: 100%;">
+                    <tr class="header-main">
+                        <th>Країна</th>
+                    </tr>
+                    {% for item in top_import_countries %}
+                    <tr>
+                        <td><b>{{ item.partner_country }}</b></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td>Дані відсутні</td></tr>
+                    {% endfor %}
+                </table>
+            </div>
+
+        </div>
     </div>
 
     <div id="Zaporizhstal" class="tabcontent">
