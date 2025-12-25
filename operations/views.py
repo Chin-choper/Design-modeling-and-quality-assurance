@@ -3,6 +3,9 @@ from django.views import generic
 from django.conf import settings
 from operations.models import Operation
 from decimal import Decimal
+from django.shortcuts import render, redirect
+from .utils import get_collection_handle
+from datetime import datetime
 
 class OperationList(generic.ListView):
     model = Operation
@@ -12,8 +15,26 @@ class OperationList(generic.ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['available_years'] = Operation.objects.dates('date', 'year')
-        context['available_months'] = Operation.objects.dates('date', 'month')
+
+        all_dates_qs = Operation.objects.dates('date', 'month')
+
+        selected_year = self.request.GET.get('year')
+
+        if selected_year:
+            context['available_months'] = all_dates_qs.filter(date__year=selected_year)
+        else:
+            unique_months = []
+            seen_months = set()
+            for d in all_dates_qs:
+                if d.month not in seen_months:
+                    unique_months.append(d)
+                    seen_months.add(d.month)
+            unique_months.sort(key=lambda x: x.month)
+            context['available_months'] = unique_months
+
         base_qs = Operation.objects.all()
+        base_qs = Operation.objects.all()
+
         if self.request.GET.get('year'):
             base_qs = base_qs.filter(date__year=self.request.GET.get('year'))
         if self.request.GET.get('month'):
@@ -59,3 +80,26 @@ class OperationList(generic.ListView):
         except Exception as e:
             print(f"Помилка: {e}")
         return super().get(request, *args, **kwargs)
+
+    def mongo_list(request):
+        collection = get_collection_handle()
+        operations = list(collection.find())
+        return render(request, 'mongo_list.html', {'operations': operations})
+
+    def mongo_create(request):
+        if request.method == 'POST':
+            collection = get_collection_handle()
+
+            new_operation = {
+                "enterprise": request.POST.get("enterprise"),
+                "op_type": request.POST.get("op_type"),
+                "product": request.POST.get("product"),
+                "amount": float(request.POST.get("amount")),
+                "date": datetime.now().strftime("%Y-%m-%d"),
+            }
+
+            collection.insert_one(new_operation) 
+
+            return redirect('mongo_list')
+
+        return render(request, 'mongo_create.html')
