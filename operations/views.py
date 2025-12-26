@@ -6,6 +6,7 @@ from decimal import Decimal
 from django.shortcuts import render, redirect
 from .utils import get_collection_handle
 from datetime import datetime
+from bson.objectid import ObjectId
 
 class OperationList(generic.ListView):
     model = Operation
@@ -99,7 +100,32 @@ class OperationList(generic.ListView):
             }
 
             collection.insert_one(new_operation) 
+            collection.insert_one(new_operation)
 
             return redirect('mongo_list')
 
         return render(request, 'mongo_create.html')
+
+    def mongo_edit(request, op_id):
+        collection = get_collection_handle()
+        operation = collection.find_one({"_id": ObjectId(op_id)})
+
+        if request.method == 'POST':
+            updated_data = {
+                "enterprise": request.POST.get("enterprise"),
+                "op_type": request.POST.get("op_type"),
+                "product": request.POST.get("product"),
+                "amount": float(request.POST.get("amount"))
+            }
+            collection.update_one(
+                {"_id": ObjectId(op_id)},
+                {"$set": updated_data}
+            )
+            return redirect('mongo_list')
+        return render(request, 'mongo_edit.html', {'operation': operation})
+
+
+    def mongo_delete(request, op_id):
+        collection = get_collection_handle()
+        collection.delete_one({"_id": ObjectId(op_id)})
+        return redirect('mongo_list')

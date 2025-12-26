@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Моніторинг операцій</title>
+</head>
+<body>
+    <h1>Моніторинг експортно-імпортних операцій (Запоріжжя)</h1>
+    <a href="{% url 'mongo_create' %}">Додати операцію</a>
+    <hr>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Підприємство</th>
+                <th>Тип</th>
+                <th>Товар</th>
+                <th>Сума</th>
+                <th>Дата</th>
+                <th>Дії</th> </tr>
+        </thead>
+        <tbody>
+            {% for op in operations %}
+            <tr>
+                <td>{{ op.enterprise }}</td>
+                <td>{{ op.op_type }}</td>
+                <td>{{ op.product }}</td>
+                <td>{{ op.amount }}</td>
+                <td>{{ op.date }}</td>
+                <td>
+                    <a href="{% url 'mongo_edit' op.id|default:op._id %}">Ред.</a> | 
+                    <a href="{% url 'mongo_delete' op.id|default:op._id %}" onclick="return confirm('Видалити?');">Видал.</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
