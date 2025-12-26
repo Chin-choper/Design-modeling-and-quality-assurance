@@ -1,27 +1,19 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Редагувати операцію</title>
-</head>
+<head><title>Редагування</title></head>
 <body>
-    <h2>Редагування</h2>
+    <h2>Редагування операції</h2>
     <form method="post">
         {% csrf_token %}
-        <label>Підприємство:</label><br>
-        <input type="text" name="enterprise" value="{{ operation.enterprise }}" required><br>
-        
-        <label>Тип операції:</label><br>
-        <select name="op_type">
-            <option value="Export" {% if operation.op_type == 'Export' %}selected{% endif %}>Експорт</option>
-            <option value="Import" {% if operation.op_type == 'Import' %}selected{% endif %}>Імпорт</option>
-        </select><br>
-        
-        <label>Товар:</label><br>
-        <input type="text" name="product" value="{{ operation.product }}" required><br>
-        
-        <label>Сума ($):</label><br>
-        <input type="number" step="0.01" name="amount" value="{{ operation.amount }}" required><br><br>
-        
+        <p>Підприємство: <input type="text" name="enterprise" value="{{ operation.enterprise }}" required></p>
+        <p>Тип: 
+            <select name="op_type">
+                <option value="Export" {% if operation.op_type == 'Export' %}selected{% endif %}>Експорт</option>
+                <option value="Import" {% if operation.op_type == 'Import' %}selected{% endif %}>Імпорт</option>
+            </select>
+        </p>
+        <p>Товар: <input type="text" name="product" value="{{ operation.product }}" required></p>
+        <p>Сума: <input type="number" step="0.01" name="amount" value="{{ operation.amount }}" required></p>
         <button type="submit">Оновити</button>
     </form>
 </body>

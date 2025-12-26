@@ -82,50 +82,50 @@ class OperationList(generic.ListView):
             print(f"Помилка: {e}")
         return super().get(request, *args, **kwargs)
 
-    def mongo_list(request):
+def mongo_list(request):
+    collection = get_collection_handle()
+    operations = list(collection.find())
+    for op in operations:
+        op['id'] = str(op['_id'])
+    return render(request, 'mongo_list.html', {'operations': operations})
+
+def mongo_create(request):
+    if request.method == 'POST':
         collection = get_collection_handle()
-        operations = list(collection.find())
-        return render(request, 'mongo_list.html', {'operations': operations})
 
-    def mongo_create(request):
-        if request.method == 'POST':
-            collection = get_collection_handle()
+        new_operation = {
+            "enterprise": request.POST.get("enterprise"),
+            "op_type": request.POST.get("op_type"),
+            "product": request.POST.get("product"),
+            "amount": float(request.POST.get("amount")),
+            "date": datetime.now().strftime("%Y-%m-%d"),
+        }
+        collection.insert_one(new_operation)
 
-            new_operation = {
-                "enterprise": request.POST.get("enterprise"),
-                "op_type": request.POST.get("op_type"),
-                "product": request.POST.get("product"),
-                "amount": float(request.POST.get("amount")),
-                "date": datetime.now().strftime("%Y-%m-%d"),
-            }
-
-            collection.insert_one(new_operation) 
-            collection.insert_one(new_operation)
-
-            return redirect('mongo_list')
-
-        return render(request, 'mongo_create.html')
-
-    def mongo_edit(request, op_id):
-        collection = get_collection_handle()
-        operation = collection.find_one({"_id": ObjectId(op_id)})
-
-        if request.method == 'POST':
-            updated_data = {
-                "enterprise": request.POST.get("enterprise"),
-                "op_type": request.POST.get("op_type"),
-                "product": request.POST.get("product"),
-                "amount": float(request.POST.get("amount"))
-            }
-            collection.update_one(
-                {"_id": ObjectId(op_id)},
-                {"$set": updated_data}
-            )
-            return redirect('mongo_list')
-        return render(request, 'mongo_edit.html', {'operation': operation})
-
-
-    def mongo_delete(request, op_id):
-        collection = get_collection_handle()
-        collection.delete_one({"_id": ObjectId(op_id)})
         return redirect('mongo_list')
+
+    return render(request, 'mongo_create.html')
+
+
+def mongo_edit(request, op_id):
+    collection = get_collection_handle()
+    operation = collection.find_one({"_id": ObjectId(op_id)})
+
+    if request.method == 'POST':
+        updated_data = {
+            "enterprise": request.POST.get("enterprise"),
+            "op_type": request.POST.get("op_type"),
+            "product": request.POST.get("product"),
+            "amount": float(request.POST.get("amount"))
+        }
+        collection.update_one(
+            {"_id": ObjectId(op_id)},
+            {"$set": updated_data}
+        )
+        return redirect('mongo_list')
+    return render(request, 'mongo_edit.html', {'operation': operation})
+
+def mongo_delete(request, op_id):
+    collection = get_collection_handle()
+    collection.delete_one({"_id": ObjectId(op_id)})
+    return redirect('mongo_list')

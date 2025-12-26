@@ -26,10 +26,9 @@
                 <td>{{ op.amount }}</td>
                 <td>{{ op.date }}</td>
                 <td>
-                    <a href="{% url 'mongo_edit' op.id|default:op._id %}">Ред.</a> | 
-                    <a href="{% url 'mongo_delete' op.id|default:op._id %}" onclick="return confirm('Видалити?');">Видал.</a>
-                </td>
-            </tr>
+                    <a href="{% url 'mongo_edit' op.id %}">Ред.</a> | 
+                    <a href="{% url 'mongo_delete' op.id %}" onclick="return confirm('Удалить?');">Видал.</a>
+                </td>            </tr>
             {% endfor %}
         </tbody>
     </table>
