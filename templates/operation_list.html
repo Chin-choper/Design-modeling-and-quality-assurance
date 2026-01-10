@@ -5,8 +5,7 @@
     <title>Моніторинг ЗЕД</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
-        
-        /* Стилі вкладок */
+
         .tab {
             overflow: hidden;
             border: 1px solid #ccc;
@@ -27,8 +26,7 @@
         }
         .tab button:hover { background-color: #ddd; }
         .tab button.active { background-color: #ccc; color: #000; }
-        
-        /* Вміст */
+
         .tabcontent {
             display: none;
             padding: 20px;
@@ -36,8 +34,7 @@
             border-top: none;
             background-color: #fff;
         }
-        
-        /* Таблиці */
+
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
         
@@ -49,116 +46,123 @@
 
     <h3>Система моніторингу експортно-імпортних операцій</h3>
 
-    <form method="get" class="filter-form">
-        <label><b>Фільтр:</b></label>
+    <form method="get" style="margin-bottom: 20px;">
+        <label>Рік:</label>
         <select name="year">
-            <option value="">Всі роки</option>
-            {% for date_obj in available_years %}
-                <option value="{{ date_obj|date:'Y' }}" {% if selected_year == date_obj|date:'Y' %}selected{% endif %}>{{ date_obj|date:'Y' }}</option>
+            {% for y in years %}
+            <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
             {% endfor %}
         </select>
+
+        <label>Місяць:</label>
         <select name="month">
-            <option value="">Всі місяці</option>
-            {% for date_obj in available_months %}
-                <option value="{{ date_obj|date:'m' }}" {% if selected_month == date_obj|date:'m' %}selected{% endif %}>{{ date_obj|date:'F' }}</option>
+            {% for m in months %}
+            <option value="{{ m.val }}" {% if m.val == selected_month %}selected{% endif %}>{{ m.name }}</option>
             {% endfor %}
         </select>
-        <button type="submit">Застосувати</button>
-        <a href="/" style="margin-left: 10px;">Скинути</a>
+
+        <button type="submit">Показати</button>
     </form>
 
     <div class="tab">
         <button class="tablinks active" onclick="openTab(event, 'GeneralView')">Загальний огляд</button>
         <button class="tablinks" onclick="openTab(event, 'CountryView')">Аналіз ТОП-країн</button>
-        <button class="tablinks" onclick="openTab(event, 'Zaporizhstal')">Запоріжсталь</button>
-        <button class="tablinks" onclick="openTab(event, 'Zaporizhkoks')">Запоріжкокс</button>
-        <button class="tablinks" onclick="openTab(event, 'MotorSich')">Мотор Січ</button>
+        <button class="tablinks" onclick="openTab(event, 'GoodsView')">Товари</button>
+        <button class="tablinks" onclick="openTab(event, 'Prediction')">Прогноз 2023 року</button>
         <button class="tablinks" onclick="openTab(event, 'DniproSpec')">Дніпроспецсталь</button>
+        <button class="tablinks" onclick="openTab(event, 'Zaporizhstal')">Запоріжсталь</button>
     </div>
 
     <div id="GeneralView" class="tabcontent" style="display: block;">
-        <h4 style="color: blue;">Експорт</h4>
+        <h4 style="color: #333;">Моніторинг за {{ selected_month }}.{{ selected_year }}</h4>
         <table>
-            <tr class="header-main"><th>Категорія товару</th><th>Сума</th><th>Дата</th></tr>
-            {% for item in operations %}{% if item.op_type == 'Export' %}
-            <tr><td>{{ item.category }}</td><td>{{ item.amount }} млн.дол.</td><td>{{ item.date }}</td></tr>
-            {% endif %}{% endfor %}
-        </table>
-        <h4 style="color: green;">Імпорт</h4>
-        <table>
-            <tr class="header-main"><th>Категорія товару</th><th>Сума</th><th>Дата</th></tr>
-            {% for item in operations %}{% if item.op_type == 'Import' %}
-            <tr><td>{{ item.category }}</td><td>{{ item.amount }} млн.дол.</td><td>{{ item.date }}</td></tr>
-            {% endif %}{% endfor %}
+            <tr class="header-main">
+                <th>Країна-партнер</th>
+                <th>Товарообіг (USD)</th>
+                <th>Експорт (USD)</th>
+                <th>Імпорт (USD)</th>
+                <th>Сальдо (USD)</th>
+                <th>Дата</th>
+            </tr>
+            {% for item in operations %}
+            <tr>
+                <td><b>{{ item.country }}</b></td>
+                <td>{{ item.turnover }}</td>
+                <td style="color: blue;">{{ item.export }}</td>
+                <td style="color: green;">{{ item.import }}</td>
+                <td>{{ item.balance }}</td>
+                <td>{{ item.date }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" style="text-align: center;">Файл не знайдено або він порожній</td></tr>
+            {% endfor %}
         </table>
     </div>
 
     <div id="CountryView" class="tabcontent">
         <div style="display: flex; gap: 50px; flex-wrap: wrap;">
-            
             <div style="min-width: 300px;">
-                <h4 style="color: blue;">ТОП Країн (Експорт)</h4>
-                <table style="width: 100%;">
-                    <tr class="header-main">
-                        <th>Країна</th>
-                    </tr>
+                <h4 style="color: blue;">ТОП-5 Країн (Експорт)</h4>
+                <table>
+                    <tr class="header-main"><th>Країна</th><th>Сума</th></tr>
                     {% for item in top_export_countries %}
-                    <tr>
-                        <td><b>{{ item.partner_country }}</b></td>
-                    </tr>
-                    {% empty %}
-                    <tr><td>Дані відсутні</td></tr>
+                    <tr><td><b>{{ item.country }}</b></td><td>{{ item.export_val }}</td></tr>
                     {% endfor %}
                 </table>
             </div>
-
             <div style="min-width: 300px;">
-                <h4 style="color: green;">ТОП Країн (Імпорт)</h4>
-                <table style="width: 100%;">
-                    <tr class="header-main">
-                        <th>Країна</th>
-                    </tr>
+                <h4 style="color: green;">ТОП-5 Країн (Імпорт)</h4>
+                <table>
+                    <tr class="header-main"><th>Країна</th><th>Сума</th></tr>
                     {% for item in top_import_countries %}
-                    <tr>
-                        <td><b>{{ item.partner_country }}</b></td>
-                    </tr>
-                    {% empty %}
-                    <tr><td>Дані відсутні</td></tr>
+                    <tr><td><b>{{ item.country }}</b></td><td>{{ item.import_val }}</td></tr>
                     {% endfor %}
                 </table>
             </div>
-
         </div>
     </div>
 
-    <div id="Zaporizhstal" class="tabcontent">
-        <h4>ПАТ "Запоріжсталь"</h4>
+    <div id="GoodsView" class="tabcontent">
+        <h4 style="color: #333;">Моніторинг за {{ selected_month }}.{{ selected_year }}</h4>
         <table>
-            <tr class="header-main"><th>Продукція</th><th>Сума</th><th>Дата</th></tr>
-            {% for item in zap_stal %}
-            <tr><td>{{ item.category }}</td><td>{{ item.amount }} грн</td><td>{{ item.date }}</td></tr>
-            {% empty %}<tr><td>Дані відсутні</td></tr>{% endfor %}
+            <tr class="header-main">
+                <th>Група</th>
+                <th>Товарообіг (USD)</th>
+                <th>Експорт (USD)</th>
+                <th>Імпорт (USD)</th>
+                <th>Сальдо (USD)</th>
+                <!--<th>Оподаткований імпорт, USD</th>
+                <th>Надходження платежів від імпорту, USD</th>
+                <th>Податкове навантаження</th>
+                <th>Мито, USD</th>
+                <th>Акцизний податок, USD</th>
+                <th>ПДВ, USD</th>-->
+                <th>Дата</th>
+            </tr>
+            {% for item in goods_operations %}
+            <tr>
+                <td><b>{{ item.product_goods }}</b></td>
+                <td>{{ item.turnover_goods }}</td>
+                <td style="color: blue;">{{ item.export_goods }}</td>
+                <td style="color: green;">{{ item.import_goods }}</td>
+                <td>{{ item.balance_goods }}</td>
+                <td>{{ item.date }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" style="text-align: center;">Файл не знайдено або він порожній</td></tr>
+            {% endfor %}
         </table>
     </div>
 
-    <div id="Zaporizhkoks" class="tabcontent">
-        <h4>ПрАТ "Запоріжкокс"</h4>
-        <table>
-            <tr class="header-main"><th>Продукція</th><th>Сума</th><th>Дата</th></tr>
-            {% for item in zap_koks %}
-            <tr><td>{{ item.category }}</td><td>{{ item.amount }} грн</td><td>{{ item.date }}</td></tr>
-            {% empty %}<tr><td>Дані відсутні</td></tr>{% endfor %}
-        </table>
-    </div>
-
-    <div id="MotorSich" class="tabcontent">
-        <h4>АТ "Мотор Січ"</h4>
-        <table>
-            <tr class="header-main"><th>Продукція</th><th>Сума</th><th>Дата</th></tr>
-            {% for item in motor %}
-            <tr><td>{{ item.category }}</td><td>{{ item.amount }} грн</td><td>{{ item.date }}</td></tr>
-            {% empty %}<tr><td>Дані відсутні</td></tr>{% endfor %}
-        </table>
+    <div id="Prediction" class="tabcontent">
+        <h4>Прогноз 2023 року</h4>
+        <div style="text-align: center; margin-top: 20px;">
+            {% if forecast_image %}
+                <img src="/static/images/{{ forecast_image }}" alt="Графік прогнозу" style="max-width: 100%; border: 1px solid #ddd;">
+            {% else %}
+                <p>Дані відсутні або файл не створено.</p>
+            {% endif %}
+        </div>
     </div>
 
     <div id="DniproSpec" class="tabcontent">
@@ -166,6 +170,16 @@
         <table>
             <tr class="header-main"><th>Продукція</th><th>Сума</th><th>Дата</th></tr>
             {% for item in dnipro %}
+            <tr><td>{{ item.category }}</td><td>{{ item.amount }} грн</td><td>{{ item.date }}</td></tr>
+            {% empty %}<tr><td>Дані відсутні</td></tr>{% endfor %}
+        </table>
+    </div>
+
+    <div id="Zaporizhstal" class="tabcontent">
+        <h4>ПАТ "Запоріжсталь"</h4>
+        <table>
+            <tr class="header-main"><th>Продукція</th><th>Сума</th><th>Дата</th></tr>
+            {% for item in zap_stal %}
             <tr><td>{{ item.category }}</td><td>{{ item.amount }} грн</td><td>{{ item.date }}</td></tr>
             {% empty %}<tr><td>Дані відсутні</td></tr>{% endfor %}
         </table>

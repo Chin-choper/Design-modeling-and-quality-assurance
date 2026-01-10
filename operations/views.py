@@ -1,5 +1,6 @@
 import os
-from django.views import generic
+import pandas as pd
+from django.views.generic import TemplateView
 from django.conf import settings
 from operations.models import Operation
 from decimal import Decimal
@@ -7,79 +8,135 @@ from django.shortcuts import render, redirect
 from .utils import get_collection_handle
 from datetime import datetime
 from bson.objectid import ObjectId
+from .ml_forecast import create_forecast_graph
 
-class OperationList(generic.ListView):
+class OperationListView(TemplateView):
     model = Operation
-    context_object_name = 'operations'
     template_name = 'operation_list.html'
+    context_object_name = 'operations'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['available_years'] = Operation.objects.dates('date', 'year')
 
-        all_dates_qs = Operation.objects.dates('date', 'month')
+        year = self.request.GET.get('year') or '2023'
+        month_param = self.request.GET.get('month') or '01'
 
-        selected_year = self.request.GET.get('year')
+        month_names = {
+            '01': 'Січень', '02': 'Лютий', '03': 'Березень', '04': 'Квітень',
+            '05': 'Травень', '06': 'Червень', '07': 'Липень', '08': 'Серпень',
+            '09': 'Вересень', '10': 'Жовтень', '11': 'Листопад', '12': 'Грудень'
+        }
+        month_name = month_names.get(month_param, 'Січень')
 
-        if selected_year:
-            context['available_months'] = all_dates_qs.filter(date__year=selected_year)
-        else:
-            unique_months = []
-            seen_months = set()
-            for d in all_dates_qs:
-                if d.month not in seen_months:
-                    unique_months.append(d)
-                    seen_months.add(d.month)
-            unique_months.sort(key=lambda x: x.month)
-            context['available_months'] = unique_months
+        main_filename = f"main_operations_{year}_{month_param}.xlsx"
+        goods_filename = f"goods_operations_{year}_{month_param}.xlsx"
 
-        base_qs = Operation.objects.all()
-        base_qs = Operation.objects.all()
+        main_path = os.path.join(settings.BASE_DIR, 'main_xlsx', main_filename)
+        goods_path = os.path.join(settings.BASE_DIR, 'goods_xlsx', goods_filename)
 
-        if self.request.GET.get('year'):
-            base_qs = base_qs.filter(date__year=self.request.GET.get('year'))
-        if self.request.GET.get('month'):
-            base_qs = base_qs.filter(date__month=self.request.GET.get('month'))
+        operations_list = []
+        goods_list = []
+        top_export_countries = []
+        top_import_countries = []
 
-        context['operations'] = base_qs.filter(op_type__in=['Export', 'Import'])
-        context['top_export_countries'] = base_qs.filter(op_type='TopExport').order_by('-amount')
-        context['top_import_countries'] = base_qs.filter(op_type='TopImport').order_by('-amount')
+        if os.path.exists(main_path):
+            try:
+                df = pd.read_excel(main_path, engine='openpyxl')
+                df.columns = [str(c).strip() for c in df.columns]
 
-        context['zap_stal'] = base_qs.filter(op_type='Zaporizhstal')
-        context['zap_koks'] = base_qs.filter(op_type='Zaporizhkoks')
-        context['motor'] = base_qs.filter(op_type='MotorSich')
-        context['dnipro'] = base_qs.filter(op_type='DniproSpec')
+                column_mapping = {
+                    'Країна-партнер': 'country',
+                    'Товарообіг, USD': 'turnover',
+                    'Експорт, USD': 'export',
+                    'Імпорт, USD': 'import',
+                    'Сальдо, USD': 'balance'
+                }
+                df = df.rename(columns=column_mapping)
+                df['date'] = f"{month_name} {year}"
 
-        context['selected_year'] = self.request.GET.get('year')
-        context['selected_month'] = self.request.GET.get('month')
+                numeric_cols = ['turnover', 'export', 'import', 'balance']
+                for col in numeric_cols:
+                    if col in df.columns:
+                        df[col] = (df[col].astype(str)
+                                   .str.replace(r'\s+', '', regex=True)
+                                   .str.replace(',', '.')
+                                   .str.replace('$', '')
+                                   )
+                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
+
+                if not df.empty:
+                    top_ex_df = df.sort_values(by='export', ascending=False).head(5)
+                    top_export_countries = [
+                        {'country': row['country'], 'export_val': row['export']}
+                        for _, row in top_ex_df.iterrows()
+                    ]
+
+                    top_im_df = df.sort_values(by='import', ascending=False).head(5)
+                    top_import_countries = [
+                        {'country': row['country'], 'import_val': row['import']}
+                        for _, row in top_im_df.iterrows()
+                    ]
+
+                operations_list = df.to_dict('records')
+
+            except Exception as e:
+                print(f"Помилка основного файлу: {e}")
+
+        if os.path.exists(goods_path):
+            try:
+                df_g = pd.read_excel(goods_path, engine='openpyxl')
+                df_g.columns = [str(c).strip() for c in df_g.columns]
+
+                mapping_g = {
+                    'Група': 'product_goods',
+                    'Товарообіг, USD': 'turnover_goods',
+                    'Експорт, USD': 'export_goods',
+                    'Імпорт, USD': 'import_goods',
+                    'Сальдо, USD': 'balance_goods'
+                }
+                df_g = df_g.rename(columns=mapping_g)
+                df_g['date'] = f"{month_name} {year}"
+
+                numeric_g = ['turnover_goods', 'export_goods', 'import_goods', 'balance_goods']
+                for col in numeric_g:
+                    if col in df_g.columns:
+                        df_g[col] = (df_g[col].astype(str)
+                                     .str.replace(r'\s+', '', regex=True)
+                                     .str.replace(',', '.')
+                                     .str.replace('$', ''))
+                        df_g[col] = pd.to_numeric(df_g[col], errors='coerce').fillna(0)
+
+                goods_list = df_g.to_dict('records')
+            except Exception as e:
+                print(f"Помилка файлу товарів: {e}")
+
+        context['forecast_image'] = create_forecast_graph()
+        context['current_year'] = year
+        context['current_month_name'] = month_names.get(month_param, 'Січень')
+
+        context.update({
+            'operations': operations_list,
+            'top_export_countries': top_export_countries,
+            'goods_operations': goods_list,
+            'top_import_countries': top_import_countries,
+            'selected_year': year,
+            'selected_month': month_param,
+            'current_month_name': month_name,
+            'years': ['2017', '2018', '2019', '2020', '2021', '2022', '2023'],
+            'months': [
+                {'val': '01', 'name': 'Січень'}, {'val': '02', 'name': 'Лютий'},
+                {'val': '03', 'name': 'Березень'}, {'val': '04', 'name': 'Квітень'},
+                {'val': '05', 'name': 'Травень'}, {'val': '06', 'name': 'Червень'},
+                {'val': '07', 'name': 'Липень'}, {'val': '08', 'name': 'Серпень'},
+                {'val': '09', 'name': 'Вересень'}, {'val': '10', 'name': 'Жовтень'},
+                {'val': '11', 'name': 'Листопад'}, {'val': '12', 'name': 'Грудень'}
+            ]
+        })
+
+        print(f"Загружено строк: {len(operations_list)}")
         return context
 
     def get(self, request, *args, **kwargs):
-        Operation.objects.all().delete()
-        try:
-            file_path = os.path.join(settings.BASE_DIR, 'test_data')
-            with open(file_path, 'r', encoding='utf-8') as f:
-                for line in f:
-                    parts = line.strip().split('|')
-                    if len(parts) == 4:
-                        Operation.objects.create(
-                            op_type=parts[0].strip(),
-                            category=parts[1].strip(),
-                            partner_country='-',
-                            amount=Decimal(parts[2].strip()),
-                            date=parts[3].strip()
-                        )
-                    elif len(parts) == 5:
-                        Operation.objects.create(
-                            op_type=parts[0].strip(),
-                            category='-',
-                            partner_country=parts[2].strip(),
-                            amount=Decimal(parts[3].strip()),
-                            date=parts[4].strip()
-                        )
-
-        except Exception as e:
-            print(f"Помилка: {e}")
         return super().get(request, *args, **kwargs)
 
 def mongo_list(request):
