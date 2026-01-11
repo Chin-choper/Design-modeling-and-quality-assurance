@@ -23,7 +23,7 @@ def create_forecast_graph():
     data_list = []
 
     if not os.path.exists(xlsx_folder):
-        print("Папка main_xlsx не найдена")
+        print("Папка main_xlsx не знайдена")
         return None
 
     for filename in os.listdir(xlsx_folder):
@@ -31,7 +31,7 @@ def create_forecast_graph():
             try:
                 parts = filename.split('_')
                 year = parts[2]
-                month = parts[3].split('.')[0] # убираем .xlsx
+                month = parts[3].split('.')[0]
 
                 date_obj = pd.to_datetime(f"{year}-{month}-01")
 
@@ -47,7 +47,7 @@ def create_forecast_graph():
                     'Import': total_imp
                 })
             except Exception as e:
-                print(f"Ошибка чтения {filename}: {e}")
+                print(f"Помилка {filename}: {e}")
 
     if not data_list:
         return None
@@ -87,7 +87,6 @@ def create_forecast_graph():
     plt.legend()
     plt.tight_layout()
 
-    # Сохраняем
     plt.savefig(full_output_path)
     plt.close()
 

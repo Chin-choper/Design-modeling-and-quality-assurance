@@ -16,12 +16,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from operations.views import OperationList
+from operations.views import OperationListView
 from operations import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', OperationList.as_view(), name='operation_list'),
+    path('', OperationListView.as_view(), name='operation_list'),
 
     path('mongo/', views.mongo_list, name='mongo_list'),
     path('mongo/create/', views.mongo_create, name='mongo_create'),
