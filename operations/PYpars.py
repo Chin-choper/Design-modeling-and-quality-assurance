@@ -22,7 +22,7 @@ def run_parser():
     print(f"Починаємо завантаження в: {base_save_dir}")
 
     try:
-        with Camoufox(headless=False) as browser:
+        with Camoufox(headless=True) as browser:
             page = browser.new_page()
             url = "https://metinvestholding.com/ru/investor/presentations"
             print(f"Переходимо на {url}...")

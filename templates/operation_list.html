@@ -69,7 +69,6 @@
         <button class="tablinks" onclick="openTab(event, 'CountryView')">Аналіз ТОП-країн</button>
         <button class="tablinks" onclick="openTab(event, 'GoodsView')">Товари</button>
         <button class="tablinks" onclick="openTab(event, 'Prediction')">Прогноз 2023 року</button>
-        <button class="tablinks" onclick="openTab(event, 'DniproSpec')">Дніпроспецсталь</button>
         <button class="tablinks" onclick="openTab(event, 'Zaporizhstal')">Запоріжсталь</button>
     </div>
 
@@ -165,24 +164,26 @@
         </div>
     </div>
 
-    <div id="DniproSpec" class="tabcontent">
-        <h4>ПрАТ "Дніпроспецсталь"</h4>
-        <table>
-            <tr class="header-main"><th>Продукція</th><th>Сума</th><th>Дата</th></tr>
-            {% for item in dnipro %}
-            <tr><td>{{ item.category }}</td><td>{{ item.amount }} грн</td><td>{{ item.date }}</td></tr>
-            {% empty %}<tr><td>Дані відсутні</td></tr>{% endfor %}
-        </table>
-    </div>
-
     <div id="Zaporizhstal" class="tabcontent">
-        <h4>ПАТ "Запоріжсталь"</h4>
-        <table>
-            <tr class="header-main"><th>Продукція</th><th>Сума</th><th>Дата</th></tr>
-            {% for item in zap_stal %}
-            <tr><td>{{ item.category }}</td><td>{{ item.amount }} грн</td><td>{{ item.date }}</td></tr>
-            {% empty %}<tr><td>Дані відсутні</td></tr>{% endfor %}
-        </table>
+        <h4 style="margin-bottom: 20px;">ПАТ "Запоріжсталь" - Презентації</h4>
+
+        {% if zp_presentations %}
+            {% for year, files in zp_presentations.items %}
+                <div style="margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                    <h3 style="color: #333;">{{ year }}</h3>
+                    <div style="display: flex; gap: 30px;">
+                        {% for file in files %}
+                            <a href="{{ file.url }}" target="_blank" style="text-decoration: none; color: #000; font-size: 16px; display: flex; align-items: center;">
+                                <span style="font-size: 20px; margin-right: 8px;">&#11015;</span>
+                                {{ file.name }}
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>Файли презентацій не знайдено. Запустіть парсер.</p>
+        {% endif %}
     </div>
 
     <script>

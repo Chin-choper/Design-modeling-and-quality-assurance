@@ -18,6 +18,8 @@ from django.contrib import admin
 from django.urls import path
 from operations.views import OperationListView
 from operations import views
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -28,3 +30,6 @@ urlpatterns = [
     path('mongo/edit/<str:op_id>/', views.mongo_edit, name='mongo_edit'),
     path('mongo/delete/<str:op_id>/', views.mongo_delete, name='mongo_delete'),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

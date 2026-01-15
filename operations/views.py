@@ -110,6 +110,27 @@ class OperationListView(TemplateView):
             except Exception as e:
                 print(f"Помилка файлу товарів: {e}")
 
+        pres_dir = os.path.join(settings.MEDIA_ROOT, 'PrezentZP')
+        presentations = {}
+
+        if os.path.exists(pres_dir):
+            for f in os.listdir(pres_dir):
+                if f.endswith('.pdf') and 'Financial year_' in f:
+                    try:
+                        year_val = f.replace('.pdf', '').split('_')[-1]
+                        if year_val not in presentations:
+                            presentations[year_val] = []
+                        file_url = f"{settings.MEDIA_URL}PrezentZP/{f}"
+                        presentations[year_val].append({
+                            'name': 'Financial year',
+                            'url': file_url
+                        })
+                    except Exception:
+                        pass
+
+        sorted_presentations = dict(sorted(presentations.items(), key=lambda x: x[0], reverse=True))
+
+        context['zp_presentations'] = sorted_presentations
         context['forecast_image'] = create_forecast_graph()
         context['current_year'] = year
         context['current_month_name'] = month_names.get(month_param, 'Січень')
