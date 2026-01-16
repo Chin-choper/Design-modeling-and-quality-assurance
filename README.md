@@ -1,8 +1,8 @@
 Відео ЛБ1 - https://drive.google.com/drive/folders/1iKVqhS0wOIJpgbSg0cogQdmi8mbK7iNj?usp=sharing
 Відео ЛБ2 - https://drive.google.com/drive/folders/1mEYtNKmLjy2ZU9WQdAgTlxASh8DyaBol?usp=sharing
 Відео ЛБ3 - https://drive.google.com/drive/folders/17idhaNV8khWRd707a5HhV8APbD6T5xcb?usp=sharing
-Відео ЛБ4 -
-Відео ЛБ5 -
+Відео ЛБ4 - https://drive.google.com/drive/folders/1ws--fPhlv6jvo92uCoI3CLMMXeVaQ576?usp=sharing
+Відео ЛБ5 - https://drive.google.com/drive/folders/1JTlqSDBDpqNKp6I9N6TQF-h9VSOt-Cx3?usp=sharing
 
 📂 1. Структура та головні файли
 
